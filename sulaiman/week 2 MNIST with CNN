@@ -1,0 +1,54 @@
+#importing all the necessary libraries of our desired model
+
+import tensorflow as tf
+from tensorflow import keras
+from keras.models import Sequential 
+from keras.layers import Dense, Dropout, Flatten                  # predict labels, reduce overfitting and convert 3D into 1D
+from keras.layers import Conv2D, MaxPooling2D                       # this is the convolutional layer, pooling layer 
+import numpy as np 
+
+from keras.datasets import mnist  #import the MNIST dataset
+
+batch_size = 128                                                   #our batch size will be 128
+num_classes = 10                                                   #the categories of outputs we will have in our dataset
+epochs = 12                                                        #number of time we will train and test our data
+
+img_rows, img_cols = 28, 28                                         #dimensions of our images
+(x_train, y_train), (x_test, y_test)=mnist.load_data()
+
+x_train = x_train.reshape(60000,28,28,1)                           #60000 is the number of images 28=image size 1=the channel
+x_test = x_test.reshape(10000,28,28,1)                              #10000 images in the test set
+
+print('x_train shape:', x_train.shape)
+print(x_train.shape[0], 'train samples')
+print(x_test.shape[0],'test samples')
+
+y_train= keras.utils.to_categorical(y_train, num_classes)        #here our target values are converted to binary values
+y_test= keras.utils.to_categorical(y_test, num_classes)
+
+
+#defining the model
+model= Sequential()
+model.add(Conv2D(32, kernel_size=(3, 3), activation='relu'))  #relu is the common activation layer in ML and DL
+model.add(MaxPooling2D(pool_size=(2,2)))
+model.add(Dropout(0.25))                                      # dropout reduces overfitting
+model.add(Flatten())
+model.add(Dense(128,activation='relu'))                       #dense layer for class prediction
+model.add(Dropout(0.5))
+model.add(Dense(num_classes, activation='softmax'))          #for data standardization
+
+
+model.compile(loss=keras.losses.categorical_crossentropy, # loss function used in classifications
+              optimizer=keras.optimizers.Adam(),  #optimization for SGD
+              metrics=['accuracy'])
+
+
+model.fit(x_train, y_train,  #error here
+          batch_size=batch_size,
+          epochs=epochs,
+          verbose=1,
+          validation_data=(x_test, y_test))
+            
+score= model.evaluate(x_test, y_test, verbose=0)
+print('Test loss:' , score[0])
+print('Test accuracy:' , score[1])
